@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<title>Le Nombre Mystère</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    background: #0e1f3b;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  }
+  .carte {
+    width: 100%;
+    max-width: 420px;
+    background: #0e1f3b;
+    border-radius: 18px;
+    padding: 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  h1 {
+    color: #ffc738;
+    font-size: 26px;
+    text-align: center;
+    letter-spacing: 1px;
+  }
+  .sous-titre {
+    color: #dbeeff;
+    font-size: 17px;
+    text-align: center;
+  }
+  input {
+    width: 100%;
+    height: 46px;
+    border: none;
+    border-radius: 10px;
+    background: #edf8ff;
+    color: #142946;
+    font-size: 18px;
+    padding: 0 12px;
+    text-align: center;
+  }
+  input:disabled { opacity: 0.5; }
+  input::placeholder { color: #7a93b5; font-size: 15px; }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  button {
+    width: 100%;
+    height: 46px;
+    border: none;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  button:active { opacity: 0.85; }
+  button:disabled { opacity: 0.45; }
+  .btn-commencer { background: #147ac2; }
+  .btn-valider { background: #e8a31f; color: #142946; }
+  .btn-rejouer { background: #2ea37b; height: 52px; }
+  .btn-fermer { background: #c73340; height: 42px; font-size: 16px; }
+  .message {
+    color: #e0f0ff;
+    font-size: 16px;
+    text-align: center;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: pre-line;
+    line-height: 1.4;
+  }
+  .compteur {
+    color: #8cd4ff;
+    font-size: 15px;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="carte">
+  <h1>LE NOMBRE MYSTÈRE</h1>
+  <div class="sous-titre">Trouve le nombre entre 1 et 100 !</div>
+
+  <input id="champPrenom" type="text" placeholder="Ton prénom" autocomplete="off" />
+  <button id="btnCommencer" class="btn-commencer">Commencer à jouer</button>
+
+  <input id="champNombre" type="number" inputmode="numeric" placeholder="Entre un nombre de 1 à 100" disabled />
+  <button id="btnValider" class="btn-valider" disabled>Valider</button>
+
+  <div id="message" class="message">Saisis ton prénom, puis appuie sur Commencer.</div>
+  <div id="compteur" class="compteur">Essais utilisés : 0 sur 7</div>
+
+  <button id="btnRejouer" class="btn-rejouer" disabled>Rejouer</button>
+  <button id="btnFermer" class="btn-fermer">Fermer le jeu</button>
+</div>
+
+<script>
+(function () {
+  var champPrenom = document.getElementById("champPrenom");
+  var btnCommencer = document.getElementById("btnCommencer");
+  var champNombre = document.getElementById("champNombre");
+  var btnValider = document.getElementById("btnValider");
+  var message = document.getElementById("message");
+  var compteur = document.getElementById("compteur");
+  var btnRejouer = document.getElementById("btnRejouer");
+  var btnFermer = document.getElementById("btnFermer");
+
+  var prenom = "Joueur";
+  var nombreSecret = 0;
+  var essais = 0;
+  var MAX_ESSAIS = 7;
+  var partieTerminee = false;
+
+  function nouvellePartie() {
+    nombreSecret = Math.floor(Math.random() * 100) + 1;
+    essais = 0;
+    partieTerminee = false;
+    champNombre.value = "";
+    champNombre.disabled = false;
+    btnValider.disabled = false;
+    btnRejouer.disabled = true;
+    compteur.textContent = "Essais utilisés : 0 sur " + MAX_ESSAIS;
+    message.textContent = "Bonne chance, " + prenom + " !\nTu as " + MAX_ESSAIS + " essais pour trouver le nombre.";
+    champNombre.focus();
+  }
+
+  function verifier() {
+    if (partieTerminee) return;
+    var texte = champNombre.value.trim();
+    if (texte === "") {
+      message.textContent = "Entre un nombre entier entre 1 et 100.";
+      return;
+    }
+    var proposition = parseInt(texte, 10);
+    if (isNaN(proposition)) {
+      message.textContent = "Entre un nombre entier entre 1 et 100.";
+      return;
+    }
+    if (proposition < 1 || proposition > 100) {
+      message.textContent = "Le nombre doit être compris entre 1 et 100.";
+      return;
+    }
+
+    essais++;
+    compteur.textContent = "Essais utilisés : " + essais + " sur " + MAX_ESSAIS;
+
+    if (proposition === nombreSecret) {
+      message.textContent = "Bravo " + prenom + " ! Tu as trouvé !\nNombre d'essais : " + essais + ".";
+      finPartie();
+    } else if (essais >= MAX_ESSAIS) {
+      message.textContent = "Dommage ! Tu as utilisé tes " + MAX_ESSAIS + " essais.\nLe nombre était " + nombreSecret + ".";
+      finPartie();
+    } else if (proposition < nombreSecret) {
+      message.textContent = "C'est plus grand !";
+    } else {
+      message.textContent = "C'est plus petit !";
+    }
+
+    champNombre.value = "";
+    if (!partieTerminee) champNombre.focus();
+  }
+
+  function finPartie() {
+    partieTerminee = true;
+    champNombre.disabled = true;
+    btnValider.disabled = true;
+    btnRejouer.disabled = false;
+  }
+
+  btnCommencer.addEventListener("click", function () {
+    prenom = champPrenom.value.trim() || "Joueur";
+    champPrenom.disabled = true;
+    btnCommencer.disabled = true;
+    nouvellePartie();
+  });
+
+  btnValider.addEventListener("click", verifier);
+  champNombre.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") verifier();
+  });
+  champPrenom.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") btnCommencer.click();
+  });
+  btnRejouer.addEventListener("click", nouvellePartie);
+  btnFermer.addEventListener("click", function () {
+    message.textContent = "Merci d'avoir joué !\nTu peux fermer cet onglet.";
+    finPartie();
+  });
+})();
+</script>
+</body>
+</html>
